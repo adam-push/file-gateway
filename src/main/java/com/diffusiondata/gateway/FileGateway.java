@@ -1,0 +1,55 @@
+package com.diffusiondata.gateway;
+
+import com.diffusiondata.gateway.framework.*;
+import com.diffusiondata.gateway.framework.exceptions.ApplicationConfigurationException;
+import com.diffusiondata.gateway.framework.exceptions.InvalidConfigurationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import static com.diffusiondata.gateway.framework.DiffusionGatewayFramework.newApplicationDetailsBuilder;
+
+public class FileGateway implements GatewayApplication {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FileGateway.class);
+
+    private static final String POLLING_BINARY_SOURCE = "POLLING_BINARY_SOURCE";
+    private static final String APPLICATION_TYPE = "FILE_SOURCE";
+
+    public FileGateway() {
+    }
+
+    public static void main(String[] args) throws Exception {
+        GatewayFramework framework = DiffusionGatewayFramework.initialize((new FileGateway()));
+        framework.start();
+    }
+
+    @Override
+    public ApplicationDetails getApplicationDetails() throws ApplicationConfigurationException {
+        return newApplicationDetailsBuilder()
+                .addServiceType(POLLING_BINARY_SOURCE,
+                        ServiceMode.POLLING_SOURCE,
+                        "A polling source that reads files from a directory and publishes their contents as topics",
+                        null)
+                .build(APPLICATION_TYPE, 2);
+    }
+
+    @Override
+    public PollingSourceHandler addPollingSource(ServiceDefinition serviceDefinition, Publisher publisher, StateHandler stateHandler) throws InvalidConfigurationException {
+        final Map<String, Object> parameters = serviceDefinition.getParameters();
+
+        Path dir = Path.of((String) parameters.getOrDefault("directory", "data-foo"));
+        LOG.info("Polling files in directory: {}", dir);
+
+        return new FilePollingSourceHandler(publisher, dir);
+    }
+
+    @Override
+    public CompletableFuture<?> stop() {
+        LOG.info("stop");
+        return CompletableFuture.completedFuture(null);
+    }
+}
