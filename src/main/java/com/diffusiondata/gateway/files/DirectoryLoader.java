@@ -1,7 +1,6 @@
 package com.diffusiondata.gateway.files;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,12 +21,7 @@ public class DirectoryLoader {
             return Stream.empty();
         }
 
-        final File[] files = dir.toFile().listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isFile();
-            }
-        });
+        final File[] files = dir.toFile().listFiles(File::isFile);
 
         if(files != null) {
             return Arrays.stream(files).map(file -> {

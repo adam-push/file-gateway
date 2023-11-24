@@ -65,6 +65,6 @@ public class DirectoryLoaderTest {
         loader = new DirectoryLoader(tempDir.resolve("nonexistent"));
 
         // Assertions
-        assert(loader.eventStream().count() == 0);
+        assert(loader.eventStream().findAny().isEmpty());
     }
 }
