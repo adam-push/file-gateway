@@ -36,11 +36,11 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         ArrayList<CompletableFuture<?>> publishFutures = new ArrayList<>();
                 updateEventStream.forEach(evt -> {
             try {
-                publishFutures.add(publisher.publish(evt.getTopicPath(), evt.getPayload().getBytes()));
+                publishFutures.add(publisher.publish(evt.getName(), evt.getPayload().getBytes()));
 
             } catch (PayloadConversionException ex) {
                 ex.printStackTrace();
-                LOG.error("Error converting payload for topic {}:", evt.getTopicPath(), ex);
+                LOG.error("Error converting payload for topic {}:", evt.getName(), ex);
                 future.completeExceptionally(ex);
             }
         });

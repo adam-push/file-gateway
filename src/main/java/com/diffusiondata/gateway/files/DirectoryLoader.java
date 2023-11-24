@@ -32,9 +32,9 @@ public class DirectoryLoader {
         if(files != null) {
             return Arrays.stream(files).map(file -> {
                 try {
-                    String topicPath = file.getName();
+                    String name = file.getName();
                     String content = new String(Files.readAllBytes(file.toPath()));
-                    return new UpdateEvent(topicPath, content);
+                    return new UpdateEvent(name, content);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     return null;

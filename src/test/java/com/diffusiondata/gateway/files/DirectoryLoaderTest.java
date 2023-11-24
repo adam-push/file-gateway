@@ -32,8 +32,8 @@ public class DirectoryLoaderTest {
 
         // Assertions
         assertEquals(2, events.size());
-        assertTrue(events.stream().anyMatch(event -> event.getTopicPath().equals("test1.txt")));
-        assertTrue(events.stream().anyMatch(event -> event.getTopicPath().equals("test2.txt")));
+        assertTrue(events.stream().anyMatch(event -> event.getName().equals("test1.txt")));
+        assertTrue(events.stream().anyMatch(event -> event.getName().equals("test2.txt")));
     }
 
     @Test
@@ -57,7 +57,7 @@ public class DirectoryLoaderTest {
 
         // Assertions
         assertEquals(1, events.size());
-        assertEquals("test.txt", events.get(0).getTopicPath());
+        assertEquals("test.txt", events.get(0).getName());
     }
 
     @Test
