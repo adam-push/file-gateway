@@ -2,7 +2,6 @@ package com.diffusiondata.gateway;
 
 import com.diffusiondata.gateway.framework.*;
 import com.diffusiondata.gateway.framework.exceptions.ApplicationConfigurationException;
-import com.diffusiondata.gateway.framework.exceptions.InvalidConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,7 @@ public class FileGateway implements GatewayApplication {
     public FileGateway() {
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         GatewayFramework framework = DiffusionGatewayFramework.initialize((new FileGateway()));
         framework.start();
     }
@@ -38,7 +37,7 @@ public class FileGateway implements GatewayApplication {
     }
 
     @Override
-    public PollingSourceHandler addPollingSource(ServiceDefinition serviceDefinition, Publisher publisher, StateHandler stateHandler) throws InvalidConfigurationException {
+    public PollingSourceHandler addPollingSource(ServiceDefinition serviceDefinition, Publisher publisher, StateHandler stateHandler) {
         final Map<String, Object> parameters = serviceDefinition.getParameters();
 
         Path dir = Path.of((String) parameters.getOrDefault("directory", "data-foo"));
