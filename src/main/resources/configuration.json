@@ -14,11 +14,6 @@
       "config" : {
         "framework" : {
           "topicType"      : "BINARY",
-          "payloadConverters" : [
-            {
-              "name" : "$Object_to_BINARY"
-            }
-          ],
           "pollIntervalMs" : 1000,
           "pollTimeoutMs"  : 500
         },
