@@ -15,9 +15,6 @@ public class FileGateway implements GatewayApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileGateway.class);
 
-    private static final String POLLING_BINARY_SOURCE = "POLLING_BINARY_SOURCE";
-    private static final String APPLICATION_TYPE = "FILE_SOURCE";
-
     public FileGateway() {
     }
 
@@ -29,18 +26,18 @@ public class FileGateway implements GatewayApplication {
     @Override
     public ApplicationDetails getApplicationDetails() throws ApplicationConfigurationException {
         return newApplicationDetailsBuilder()
-                .addServiceType(POLLING_BINARY_SOURCE,
+                .addServiceType("POLLING_BINARY_SOURCE",
                         ServiceMode.POLLING_SOURCE,
                         "A polling source that reads files from a directory and publishes their contents as topics",
                         null)
-                .build(APPLICATION_TYPE, 2);
+                .build("FILE_SOURCE", 1);
     }
 
     @Override
     public PollingSourceHandler addPollingSource(ServiceDefinition serviceDefinition, Publisher publisher, StateHandler stateHandler) {
         final Map<String, Object> parameters = serviceDefinition.getParameters();
 
-        Path dir = Path.of((String) parameters.getOrDefault("directory", "data-foo"));
+        Path dir = Path.of((String) parameters.getOrDefault("directory", "data"));
         LOG.info("Polling files in directory: {}", dir);
 
         return new FilePollingSourceHandler(publisher, dir);
