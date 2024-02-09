@@ -2,9 +2,11 @@ package com.diffusiondata.gateway;
 
 import com.diffusiondata.gateway.files.DirectoryLoader;
 import com.diffusiondata.gateway.files.UpdateEvent;
+import com.diffusiondata.gateway.framework.DiffusionGatewayFramework;
 import com.diffusiondata.gateway.framework.PollingSourceHandler;
 import com.diffusiondata.gateway.framework.Publisher;
 import com.diffusiondata.gateway.framework.exceptions.PayloadConversionException;
+import com.pushtechnology.diffusion.client.Diffusion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +38,7 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         ArrayList<CompletableFuture<?>> publishFutures = new ArrayList<>();
                 updateEventStream.forEach(evt -> {
             try {
-                publishFutures.add(publisher.publish(evt.getName(), evt.getPayload().getBytes()));
-
+                publishFutures.add(publisher.publish(evt.getName(), evt.getPayload()));
             } catch (PayloadConversionException ex) {
                 ex.printStackTrace();
                 LOG.error("Error converting payload for topic {}:", evt.getName(), ex);

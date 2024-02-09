@@ -19,14 +19,13 @@ public class FileGateway implements GatewayApplication {
     }
 
     public static void main(String[] args) {
-        GatewayFramework framework = DiffusionGatewayFramework.initialize((new FileGateway()));
-        framework.start();
+        DiffusionGatewayFramework.start(new FileGateway());
     }
 
     @Override
     public ApplicationDetails getApplicationDetails() throws ApplicationConfigurationException {
         return newApplicationDetailsBuilder()
-                .addServiceType("POLLING_BINARY_SOURCE",
+                .addServiceType("POLLING_JSON_SOURCE",
                         ServiceMode.POLLING_SOURCE,
                         "A polling source that reads files from a directory and publishes their contents as topics",
                         null)
