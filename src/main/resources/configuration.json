@@ -1,7 +1,5 @@
 {
   "id"                  : "file-gateway",
-  "application-version" : 1,
-  "framework-version"   : 1,
   "diffusion" : {
     "url"       : "ws://localhost:8090",
     "principal" : "admin",
@@ -10,15 +8,16 @@
   "services" : [
     {
       "serviceName" : "File polling service",
-      "serviceType" : "POLLING_BINARY_SOURCE",
+      "serviceType" : "POLLING_JSON_SOURCE",
       "config" : {
         "framework" : {
-          "topicType"      : "BINARY",
           "pollIntervalMs" : 1000,
-          "pollTimeoutMs"  : 500
+          "pollTimeoutMs"  : 500,
+          "payloadConverters" : [{"name": "$CSV_to_JSON"}]
         },
         "application" : {
-          "directory" : "/tmp/data"
+          "directory" : "csv-data",
+          "stopAfterInitialLoad" : false
         }
       }
     }
