@@ -21,13 +21,21 @@ public class DirectoryLoader {
             return Stream.empty();
         }
 
-        final File[] files = dir.toFile().listFiles(File::isFile);
+        //final File[] files = dir.toFile().listFiles(File::isFile);
+        Stream<Path> paths;
+        try {
+            paths = Files.walk(dir).filter(Files::isRegularFile);
+        }
+        catch(IOException ex) {
+            ex.printStackTrace();
+            return Stream.empty();
+        }
 
-        if(files != null) {
-            return Arrays.stream(files).map(file -> {
+        if(paths != null) {
+            return paths.map(path -> {
                 try {
-                    String name = file.getName();
-                    String content = new String(Files.readAllBytes(file.toPath()));
+                    final String name = path.toString().substring(dir.toString().length() + 1);
+                    String content = new String(Files.readAllBytes(path));
                     return new UpdateEvent(name, content);
                 } catch (IOException ex) {
                     ex.printStackTrace();

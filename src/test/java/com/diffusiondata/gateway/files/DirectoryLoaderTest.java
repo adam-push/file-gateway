@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 public class DirectoryLoaderTest {
@@ -26,14 +27,18 @@ public class DirectoryLoaderTest {
         // Create some test files
         Files.writeString(tempDir.resolve("test1.txt"), "content1");
         Files.writeString(tempDir.resolve("test2.txt"), "content2");
+        Files.createDirectory(Paths.get(tempDir.toString(), "sub"));
+        Files.writeString(tempDir.resolve("sub/test3.txt"), "content3");
 
         // Test
         var events = loader.eventStream().collect(Collectors.toList());
 
+        System.out.println("Events: " + events.size());
         // Assertions
-        assertEquals(2, events.size());
+        assertEquals(3, events.size());
         assertTrue(events.stream().anyMatch(event -> event.getName().equals("test1.txt")));
         assertTrue(events.stream().anyMatch(event -> event.getName().equals("test2.txt")));
+        assertTrue(events.stream().anyMatch(event -> event.getName().equals("sub/test3.txt")));
     }
 
     @Test
@@ -42,22 +47,6 @@ public class DirectoryLoaderTest {
 
         // Assertions
         assertTrue(events.isEmpty());
-    }
-
-    @Test
-    public void shouldIgnoreSubdirectories() throws Exception {
-        // Create a file in this directory
-        Files.writeString(tempDir.resolve("test.txt"), "content");
-
-        // Create a subdirectory and a file
-        Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
-        Files.writeString(subDir.resolve("subtest.txt"), "content");
-        // Test
-        var events = loader.eventStream().collect(Collectors.toList());
-
-        // Assertions
-        assertEquals(1, events.size());
-        assertEquals("test.txt", events.get(0).getName());
     }
 
     @Test
