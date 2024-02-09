@@ -21,10 +21,14 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
 
     private final Publisher publisher;
     private final Path dir;
+    private final boolean stopAfterInitialLoad;
 
-    public FilePollingSourceHandler(Publisher publisher, Path dir) {
+    public FilePollingSourceHandler(Publisher publisher, Path dir, boolean stopAfterInitialLoad) {
         this.publisher = publisher;
         this.dir = dir;
+        this.stopAfterInitialLoad = stopAfterInitialLoad;
+
+        LOG.info("stopAfterInitialLoad:" + stopAfterInitialLoad);
     }
 
     @Override
@@ -48,6 +52,10 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
 
         publishFutures.forEach(CompletableFuture::join);
         future.complete(null);
+
+        if(stopAfterInitialLoad) {
+            DiffusionGatewayFramework.shutdown();
+        }
 
         return future;
     }

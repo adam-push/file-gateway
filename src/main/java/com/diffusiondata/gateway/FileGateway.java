@@ -38,8 +38,9 @@ public class FileGateway implements GatewayApplication {
 
         Path dir = Path.of((String) parameters.getOrDefault("directory", "data"));
         LOG.info("Polling files in directory: {}", dir);
+        boolean stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
 
-        return new FilePollingSourceHandler(publisher, dir);
+        return new FilePollingSourceHandler(publisher, dir, stopAfterInitialLoad);
     }
 
     @Override
