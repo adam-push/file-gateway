@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Log4j 2 configuration file.
+
+Diffusion uses the Log4j 2 logging library.
+[https://logging.apache.org/log4j/2.x/index.html]
+
+If you change the location of the main log file in this configuration, also
+update the settings 'console-monitored-log' and 'default-logs-directory' in the
+logging configuration file etc/Logs.xml. Failure to update these settings will
+result in no log being available to view in the Diffusion management console.
+
+-->
+
+<Configuration status="warn"
+               name="Diffusion"
+               shutdownHook="disable">  <!-- When running standalone, Diffusion will manage Log4J shutdown.   -->
+
+    <Properties>
+        <Property name="log.dir">${sys:diffusion.home:-..}/logs</Property>
+
+        <Property name="pattern">%date{DEFAULT_PERIOD}|%level|%thread|%marker|%notEmpty{&lt;%X{principal}&gt;}|%X{session}|%replace{%msg}{\|}{¦}|%logger%n%xEx
+        </Property>
+    </Properties>
+
+
+    <!-- Uncomment the following DynamicThresholdFilter to log
+         messages associated with the 'admin' principal at debug level
+         and messages for other principals at 'info' level. -->
+    <!--
+    <DynamicThresholdFilter key="principal" defaultThreshold="info"
+                            onMatch="ACCEPT" onMismatch="NEUTRAL">
+        <KeyValuePair key="admin" value="debug"/>
+    </DynamicThresholdFilter>
+    -->
+
+    <Appenders>
+        <Console name="console">
+            <PatternLayout pattern="${pattern}" />
+        </Console>
+
+        <RollingRandomAccessFile name="file" immediateFlush="false" fileName="${log.dir}/Server.log"
+            filePattern="${log.dir}/$${date:yyyy-MM}/Server-%d{MM-dd-yyyy}-%i.log.gz">
+
+            <PatternLayout pattern="${pattern}" />
+
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="250 MB" />
+            </Policies>
+
+            <DefaultRolloverStrategy max="20" />
+        </RollingRandomAccessFile>
+    </Appenders>
+
+    <Loggers>
+        <AsyncRoot level="info" includeLocation="false">
+            <AppenderRef ref="console" />
+            <!-- <AppenderRef ref="file" /> -->
+        </AsyncRoot>
+        <!-- Example configuration that sets a specific log level for the XmlConfigurationLoaderImpl logger. -->
+        <!-- <Logger name="com.pushtechnology.diffusion.xmlproperties.XmlConfigurationLoaderImpl" level="error" /> -->
+        <!-- Logger name="com.pushtechnology.diffusion.clients.impl.ClientImpl" level="debug"/ -->
+    </Loggers>
+</Configuration>
