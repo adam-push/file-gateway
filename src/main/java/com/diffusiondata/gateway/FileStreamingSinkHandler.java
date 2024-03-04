@@ -72,7 +72,7 @@ public class FileStreamingSinkHandler implements SinkHandler<String> {
     @Override
     public CompletableFuture<?> update(String topicPath, String value, TopicProperties topicProperties) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("upate(" + topicPath + ", " + value + ")");
+            LOG.debug("update(" + topicPath + ", " + value + ")");
         }
 
         final CompletableFuture future = new CompletableFuture();
