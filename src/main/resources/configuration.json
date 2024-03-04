@@ -1,5 +1,5 @@
 {
-  "id"                  : "file-gateway",
+  "id"        : "file-gateway",
   "diffusion" : {
     "url"       : "ws://localhost:8090",
     "principal" : "admin",
@@ -13,11 +13,23 @@
         "framework" : {
           "pollIntervalMs" : 1000,
           "pollTimeoutMs"  : 500,
-          "payloadConverters" : [{"name": "$CSV_to_JSON"}]
+          "payloadConverters" : [{"name": "XML_to_JSON"}]
         },
         "application" : {
-          "directory" : "csv-data",
+          "directory" : "xml-data",
           "stopAfterInitialLoad" : false
+        }
+      }
+    },
+    {
+      "serviceName" : "Streaming file writer service",
+      "serviceType" : "FILE_STRING_SINK",
+      "config" : {
+        "framework" : {
+          "diffusionTopicSelector" : "?test//"
+        },
+        "application" : {
+
         }
       }
     }

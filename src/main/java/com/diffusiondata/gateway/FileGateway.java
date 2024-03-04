@@ -2,6 +2,7 @@ package com.diffusiondata.gateway;
 
 import com.diffusiondata.gateway.framework.*;
 import com.diffusiondata.gateway.framework.exceptions.ApplicationConfigurationException;
+import com.diffusiondata.gateway.framework.exceptions.InvalidConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,10 @@ public class FileGateway implements GatewayApplication {
                         ServiceMode.POLLING_SOURCE,
                         "A polling source that reads files from a directory and publishes their contents as topics",
                         null)
+                .addServiceType("STREAMING_STRING_SINK",
+                        ServiceMode.SINK,
+                        "A sink that writes topic data to files",
+                        null)
                 .build("FILE_SOURCE", 1);
     }
 
@@ -40,6 +45,9 @@ public class FileGateway implements GatewayApplication {
     }
 
     @Override
+    public SinkHandler<?> addSink(ServiceDefinition serviceDefinition, Subscriber subscriber, StateHandler stateHandler) throws InvalidConfigurationException {
+        LOG.info("Added sink service");
+        return new FileStreamingSinkHandler();
     }
 
     @Override
