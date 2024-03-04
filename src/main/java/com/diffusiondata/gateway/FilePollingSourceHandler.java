@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -23,11 +24,13 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
     private final Path dir;
     private final boolean stopAfterInitialLoad;
 
-    public FilePollingSourceHandler(Publisher publisher, Path dir, boolean stopAfterInitialLoad) {
+    public FilePollingSourceHandler(Publisher publisher, Map<String, Object> parameters) {
         this.publisher = publisher;
-        this.dir = dir;
-        this.stopAfterInitialLoad = stopAfterInitialLoad;
 
+        this.dir = Path.of((String) parameters.getOrDefault("directory", "data"));
+        LOG.info("Polling files in directory: {}", dir);
+
+        this.stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
         LOG.info("stopAfterInitialLoad:" + stopAfterInitialLoad);
     }
 

@@ -36,11 +36,10 @@ public class FileGateway implements GatewayApplication {
     public PollingSourceHandler addPollingSource(ServiceDefinition serviceDefinition, Publisher publisher, StateHandler stateHandler) {
         final Map<String, Object> parameters = serviceDefinition.getParameters();
 
-        Path dir = Path.of((String) parameters.getOrDefault("directory", "data"));
-        LOG.info("Polling files in directory: {}", dir);
-        boolean stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
+        return new FilePollingSourceHandler(publisher, parameters);
+    }
 
-        return new FilePollingSourceHandler(publisher, dir, stopAfterInitialLoad);
+    @Override
     }
 
     @Override
