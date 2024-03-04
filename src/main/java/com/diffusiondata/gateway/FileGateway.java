@@ -30,7 +30,7 @@ public class FileGateway implements GatewayApplication {
                         ServiceMode.POLLING_SOURCE,
                         "A polling source that reads files from a directory and publishes their contents as topics",
                         null)
-                .addServiceType("STREAMING_STRING_SINK",
+                .addServiceType("FILE_STRING_SINK",
                         ServiceMode.SINK,
                         "A sink that writes topic data to files",
                         null)
@@ -47,7 +47,9 @@ public class FileGateway implements GatewayApplication {
     @Override
     public SinkHandler<?> addSink(ServiceDefinition serviceDefinition, Subscriber subscriber, StateHandler stateHandler) throws InvalidConfigurationException {
         LOG.info("Added sink service");
-        return new FileStreamingSinkHandler();
+        final Map<String, Object> parameters = serviceDefinition.getParameters();
+
+        return new FileStreamingSinkHandler(subscriber, parameters);
     }
 
     @Override

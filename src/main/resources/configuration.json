@@ -29,7 +29,10 @@
           "diffusionTopicSelector" : "?test//"
         },
         "application" : {
-
+          "directory" : "/tmp",
+          "filename"  : "data.log",
+          "overwrite" : false,
+          "flush"     : true
         }
       }
     }
