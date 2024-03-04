@@ -71,7 +71,9 @@ public class FileStreamingSinkHandler implements SinkHandler<String> {
 
     @Override
     public CompletableFuture<?> update(String topicPath, String value, TopicProperties topicProperties) {
-        System.out.println("++AST: update(" + topicPath + ", " + value + ")");
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("upate(" + topicPath + ", " + value + ")");
+        }
 
         final CompletableFuture future = new CompletableFuture();
 
@@ -132,13 +134,13 @@ public class FileStreamingSinkHandler implements SinkHandler<String> {
 
     @Override
     public CompletableFuture<?> pause(PauseReason reason) {
-        System.out.println("++AST: Service paused: " + reason);
+        LOG.info("Pausing: " + reason);
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<?> resume(ResumeReason reason) {
-        System.out.println("++AST: Service resumed: " + reason);
+        LOG.info("Resuming: " + reason);
         return CompletableFuture.completedFuture(null);
     }
 }

@@ -65,13 +65,13 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
 
     @Override
     public CompletableFuture<?> pause(PauseReason reason) {
-        LOG.info("Pausing");
+        LOG.info("Pausing: " + reason);
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<?> resume(ResumeReason reason) {
-        LOG.info("Resuming");
+        LOG.info("Resuming: " + reason);
         return CompletableFuture.completedFuture(null);
     }
 }
