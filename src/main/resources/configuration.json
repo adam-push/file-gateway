@@ -12,11 +12,11 @@
       "config" : {
         "framework" : {
           "pollIntervalMs" : 1000,
-          "pollTimeoutMs"  : 500,
-          "payloadConverters" : [{"name": "XML_to_JSON"}]
+          "pollTimeoutMs"  : 500
         },
         "application" : {
-          "directory" : "xml-data",
+          "directory" : "data",
+          "topicRoot" : "incoming",
           "stopAfterInitialLoad" : false
         }
       }
