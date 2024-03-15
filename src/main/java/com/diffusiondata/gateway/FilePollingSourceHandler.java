@@ -50,7 +50,7 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         final DirectoryLoader loader = new DirectoryLoader(dir);
         final Stream<UpdateEvent> updateEventStream = loader.eventStream();
 
-        LOG.info("poll...");
+        LOG.debug("poll...");
         ArrayList<CompletableFuture<?>> publishFutures = new ArrayList<>();
                 updateEventStream.forEach(evt -> {
             try {

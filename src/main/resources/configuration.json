@@ -1,40 +1,53 @@
 {
-  "id"        : "file-gateway",
-  "diffusion" : {
-    "url"       : "ws://localhost:8090",
-    "principal" : "admin",
-    "password"  : "password"
-  },
-  "services" : [
-    {
-      "serviceName" : "File polling service",
-      "serviceType" : "POLLING_JSON_SOURCE",
-      "config" : {
-        "framework" : {
-          "pollIntervalMs" : 1000,
-          "pollTimeoutMs"  : 500
-        },
-        "application" : {
-          "directory" : "data",
-          "topicRoot" : "incoming",
-          "stopAfterInitialLoad" : false
-        }
-      }
+    "id"        : "file-gateway",
+    "diffusion" : {
+        "url"       : "ws://localhost:8090",
+        "principal" : "admin",
+        "password"  : "password"
     },
-    {
-      "serviceName" : "Streaming file writer service",
-      "serviceType" : "FILE_STRING_SINK",
-      "config" : {
+    "global" : {
         "framework" : {
-          "diffusionTopicSelector" : "?test//"
+            "metrics" : {
+                "enabled" : true
+            }
         },
         "application" : {
-          "directory" : "/tmp",
-          "filename"  : "data.log",
-          "overwrite" : false,
-          "flush"     : true
+            "prometheus" : {
+                "path" : "/metrics",
+                "port" : 8005
+            }
         }
-      }
-    }
-  ]
+    },
+    "services" : [
+        {
+            "serviceName" : "File polling service",
+            "serviceType" : "POLLING_JSON_SOURCE",
+            "config" : {
+                "framework" : {
+                    "pollIntervalMs" : 1000,
+                    "pollTimeoutMs"  : 500
+                },
+                "application" : {
+                    "directory" : "data",
+                    "topicRoot" : "incoming",
+                    "stopAfterInitialLoad" : false
+                }
+            }
+        },
+        {
+            "serviceName" : "Streaming file writer service",
+            "serviceType" : "FILE_STRING_SINK",
+            "config" : {
+                "framework" : {
+                    "diffusionTopicSelector" : "?test//"
+                },
+                "application" : {
+                    "directory" : "/tmp",
+                    "filename"  : "data.log",
+                    "overwrite" : false,
+                    "flush"     : true
+                }
+            }
+        }
+    ]
 }

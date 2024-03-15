@@ -33,7 +33,6 @@ public class DirectoryLoaderTest {
         // Test
         var events = loader.eventStream().collect(Collectors.toList());
 
-        System.out.println("Events: " + events.size());
         // Assertions
         assertEquals(3, events.size());
         assertTrue(events.stream().anyMatch(event -> event.getName().equals("test1.txt")));
