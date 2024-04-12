@@ -69,6 +69,14 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
 
         if(stopAfterInitialLoad) {
             DiffusionGatewayFramework.shutdown();
+            try {
+                Thread.sleep(2000);
+            }
+            catch(InterruptedException ignore) {
+            }
+            finally {
+                Runtime.getRuntime().exit(0);
+            }
         }
 
         return future;
