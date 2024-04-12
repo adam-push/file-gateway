@@ -6,7 +6,6 @@ import com.diffusiondata.gateway.framework.DiffusionGatewayFramework;
 import com.diffusiondata.gateway.framework.PollingSourceHandler;
 import com.diffusiondata.gateway.framework.Publisher;
 import com.diffusiondata.gateway.framework.exceptions.PayloadConversionException;
-import com.pushtechnology.diffusion.topics.tree.TopicPathUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
     private final Path dir;
     private final boolean stopAfterInitialLoad;
     private final Path topicRoot;
+    private final boolean recordPerLine;
 
     public FilePollingSourceHandler(Publisher publisher, Map<String, Object> parameters) {
         this.publisher = publisher;
@@ -40,7 +40,8 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         }
 
         this.stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
-        LOG.info("stopAfterInitialLoad:" + stopAfterInitialLoad);
+
+        this.recordPerLine = (boolean) parameters.getOrDefault("recordPerLine", false);
     }
 
     @Override
@@ -56,7 +57,20 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
             try {
                 // Use Path to convert to a topic path, they are similar enough
                 String topicPath = Path.of(topicRoot.toString(), evt.getName()).toString();
-                publishFutures.add(publisher.publish(topicPath, evt.getPayload()));
+                if(recordPerLine) {
+                    evt.getPayload().lines().forEach(line -> {
+                        try {
+                            publishFutures.add(publisher.publish(topicPath, line));
+                        }
+                        catch(PayloadConversionException ex) {
+                            ex.printStackTrace();
+                            LOG.error("Error converting payload for topic {}:", evt.getName(), ex);
+                        }
+                    });
+                }
+                else {
+                    publishFutures.add(publisher.publish(topicPath, evt.getPayload()));
+                }
             } catch (PayloadConversionException ex) {
                 ex.printStackTrace();
                 LOG.error("Error converting payload for topic {}:", evt.getName(), ex);
