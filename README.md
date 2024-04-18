@@ -5,14 +5,16 @@ This is a Gateway Framework application used for self-learning.
 It has two services available for use:
 
 ## POLLING_JSON_SOURCE
-Periodically poll for files in a named directory, and pushes their contents to Diffusion, on topic per file.
+Periodically poll for files in a named directory, and pushes their contents to Diffusion, one topic per file.
 
 ### Application parameters
 
-| Parameter | Description |
-|-|-|
-|`directory` | Name of the directory to poll files from |
-|`stopAfterInitialLoad` | Stop polling after all files have be read once |
+| Parameter | Mandatory | Default | Description                                           |
+|-|-|-|-|
+|`directory` | N | data | Name of the directory to poll files from.             |
+|`topicRoot` | N | | Path segment prepended to the destination topic name. |
+|`stopAfterInitialLoad` | N | false | Stop polling after all files have be read once.                                    |
+|`recordPerLine` | N | false | If the input file(s) contain multiple lines, treat each line as a separate record. |
 
 
 ## FILE_STRING_SINK
