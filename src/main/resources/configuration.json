@@ -31,7 +31,11 @@
                     "directory" : "data",
                     "topicRoot" : "incoming",
                     "stopAfterInitialLoad" : false,
-                    "recordPerLine" : true
+                    "recordPerLine" : true,
+                    "processor" : {
+                        "script" : "script.clj",
+                        "entry"  : "processor/transform"
+                    }
                 }
             }
         },

@@ -1,5 +1,6 @@
 package com.diffusiondata.gateway;
 
+import clojure.lang.APersistentMap;
 import com.diffusiondata.gateway.files.DirectoryLoader;
 import com.diffusiondata.gateway.files.UpdateEvent;
 import com.diffusiondata.gateway.framework.DiffusionGatewayFramework;
@@ -10,8 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -24,6 +24,7 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
     private final boolean stopAfterInitialLoad;
     private final Path topicRoot;
     private final boolean recordPerLine;
+    private final Processor processor;
 
     public FilePollingSourceHandler(Publisher publisher, Map<String, Object> parameters) {
         this.publisher = publisher;
@@ -42,6 +43,45 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         this.stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
 
         this.recordPerLine = (boolean) parameters.getOrDefault("recordPerLine", false);
+
+        Map<String, String> processorConfig = (Map<String, String>) parameters.get("processor");
+        if(processorConfig != null) {
+            this.processor = new Processor(processorConfig);
+        }
+        else {
+            this.processor = null;
+        }
+    }
+
+    private CompletableFuture<? extends Object> proxyPublish(String defaultTopic, Object value) {
+        if(value instanceof String) {
+            try {
+                return publisher.publish(defaultTopic, (String) value);
+            }
+            catch(PayloadConversionException ex) {
+                ex.printStackTrace();
+                return CompletableFuture.failedFuture(ex);
+            }
+        }
+
+        if(value instanceof clojure.lang.APersistentMap) {
+            APersistentMap map = (APersistentMap)value;
+
+            List<CompletableFuture> futures = new ArrayList<>();
+            map.forEach((topicPath, topicValue) -> {
+               CompletableFuture<?> pubFuture = null;
+               try {
+                   futures.add(publisher.publish((String)topicPath, topicValue));
+               }
+               catch(PayloadConversionException ex) {
+                   ex.printStackTrace();
+                   futures.add(CompletableFuture.failedFuture(ex));
+               }
+            });
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        }
+
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -54,28 +94,33 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         LOG.debug("poll...");
         ArrayList<CompletableFuture<?>> publishFutures = new ArrayList<>();
                 updateEventStream.forEach(evt -> {
-            try {
-                // Use Path to convert to a topic path, they are similar enough
-                String topicPath = Path.of(topicRoot.toString(), evt.getName()).toString();
-                if(recordPerLine) {
-                    evt.getPayload().lines().forEach(line -> {
-                        try {
-                            publishFutures.add(publisher.publish(topicPath, line));
-                        }
-                        catch(PayloadConversionException ex) {
-                            ex.printStackTrace();
-                            LOG.error("Error converting payload for topic {}:", evt.getName(), ex);
-                        }
-                    });
+
+            // Use Path to convert to a topic path, they are similar enough
+            String topicPath = Path.of(topicRoot.toString(), evt.getName()).toString();
+
+            if(recordPerLine) {
+                evt.getPayload().lines().forEach(line -> {
+                    Object value;
+                    if(processor != null) {
+                        value = processor.invoke(evt.getName(), line);
+                    }
+                    else {
+                        value = line;
+                    }
+                    publishFutures.add(proxyPublish(topicPath, value));
+                });
+            }
+            else {
+                Object value;
+                if(processor != null) {
+                    value = processor.invoke(evt.getName(), evt.getPayload());
                 }
                 else {
-                    publishFutures.add(publisher.publish(topicPath, evt.getPayload()));
+                    value = evt.getPayload();
                 }
-            } catch (PayloadConversionException ex) {
-                ex.printStackTrace();
-                LOG.error("Error converting payload for topic {}:", evt.getName(), ex);
-                future.completeExceptionally(ex);
+                publishFutures.add(proxyPublish(topicPath, value));
             }
+
         });
 
         publishFutures.forEach(CompletableFuture::join);
