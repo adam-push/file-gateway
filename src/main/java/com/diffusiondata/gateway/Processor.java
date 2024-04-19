@@ -19,11 +19,6 @@ public class Processor {
         loadFile.invoke(scriptName);
     }
 
-    public void start() {
-        loadFile.invoke(scriptName);
-    }
-    // TODO: stop, pause, resume ?
-
     public Object invoke(String path, String value) {
         Object newValue = entryPoint.invoke(path, value);
         return newValue;
