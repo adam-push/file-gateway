@@ -6,7 +6,7 @@
 
     <groupId>com.diffusiondata.utils</groupId>
     <artifactId>file-gateway</artifactId>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

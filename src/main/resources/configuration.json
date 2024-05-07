@@ -32,6 +32,7 @@
                     "topicRoot" : "incoming",
                     "provider" : "NextFileNextLine",
                     "stopAfterInitialLoad" : true,
+                    "deleteFiles" : false,
                     "processor" : {
                         "script" : "script.clj",
                         "entry"  : "processor/transform"

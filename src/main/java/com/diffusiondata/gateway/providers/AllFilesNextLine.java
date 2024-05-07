@@ -17,14 +17,16 @@ public class AllFilesNextLine implements Provider {
     private final Queue<UpdateEvent> eventQueue;
     private final Path dir;
     private final boolean processOnce;
+    private final boolean deleteFiles;
 
     private List<Path> paths = null;
     private Map<Path, BufferedReader> readerMap = new HashMap<>();
 
-    public AllFilesNextLine(Queue<UpdateEvent> eventQueue, Path dir, boolean processOnce) {
+    public AllFilesNextLine(Queue<UpdateEvent> eventQueue, Path dir, boolean processOnce, boolean deleteFiles) {
         this.eventQueue = eventQueue;
         this.dir = dir;
         this.processOnce = processOnce;
+        this.deleteFiles = deleteFiles;
     }
 
     private BufferedReader getReader(Path path) {
@@ -66,6 +68,9 @@ public class AllFilesNextLine implements Provider {
                     String line = reader.readLine();
                     if (line == null) {
                         reader.close();
+                        if(deleteFiles) {
+                            Files.delete(path);
+                        }
                         readerMap.put(path, null);
                         if(! processOnce) {
                             reader = getReader(path);

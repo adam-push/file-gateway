@@ -21,6 +21,7 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
 
     private final Path dir;
     private final boolean stopAfterInitialLoad;
+    private final boolean deleteFiles;
     private final Path topicRoot;
     private final boolean recordPerLine;
     private final Processor processor;
@@ -36,29 +37,30 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         LOG.info("Polling files in directory: {}", dir);
 
         this.stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
+        this.deleteFiles = (boolean) parameters.getOrDefault("deleteFiles", false);
 
         this.eventQueue = new LinkedBlockingQueue<>();
         switch((String) parameters.getOrDefault("provider", "AllFilesAllData")) {
             case "AllFilesAllData" :
-                this.provider = new AllFilesAllData(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new AllFilesAllData(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
             case "AllFilesEveryLine" :
-                this.provider = new AllFilesEveryLine(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new AllFilesEveryLine(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
             case "AllFilesNextLine":
-                this.provider = new AllFilesNextLine(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new AllFilesNextLine(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
             case "NextFileAllData":
-                this.provider = new NextFileAllData(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new NextFileAllData(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
             case "NextFileEveryLine":
-                this.provider = new NextFileEveryLine(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new NextFileEveryLine(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
             case "NextFileNextLine":
-                this.provider = new NextFileNextLine(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new NextFileNextLine(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
             default:
-                this.provider = new AllFilesAllData(eventQueue, dir, stopAfterInitialLoad);
+                this.provider = new AllFilesAllData(eventQueue, dir, stopAfterInitialLoad, deleteFiles);
                 break;
         }
 

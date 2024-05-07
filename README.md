@@ -9,11 +9,12 @@ Periodically poll for files in a named directory, and pushes their contents to D
 
 ### Application parameters
 
-| Parameter | Mandatory | Default | Description                                           |
-|-|-|-|-|
-|`directory` | N | data | Name of the directory to poll files from.             |
+| Parameter | Mandatory | Default | Description |
+|-|:-:|:-:|-|
+|`directory` | N | data | Name of the directory to poll files from. |
 |`topicRoot` | N | | Path segment prepended to the destination topic name. |
-|`stopAfterInitialLoad` | N | false | Stop polling after all files have be read once.                                    |
+|`stopAfterInitialLoad` | N | false | Stop polling after all files have be read once. |
+|`deleteFiles`| N | false | Delete files after they have been read. |
 |`recordPerLine` | N | false | If the input file(s) contain multiple lines, treat each line as a separate record. |
 
 
@@ -21,7 +22,7 @@ Periodically poll for files in a named directory, and pushes their contents to D
 Subscribes to topics and writes the data to one or more files.
 
 | Parameter   | Mandatory | Default | Description                                                                                                                                                                           |
-|-------------|-|-|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-------------|:-:|:-:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `directory` |Y|| Directory into which files will be written                                                                                                                                            |
 | `filename`  |N|Topic name| The name of the file to write to, or if left empty, generated from the topic path.                                                                                                    |
 | `overwrite` |N|false| Overwrite or append to the file on each topic update                                                                                                                                  |

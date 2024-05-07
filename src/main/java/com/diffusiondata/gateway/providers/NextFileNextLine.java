@@ -20,15 +20,17 @@ public class NextFileNextLine implements Provider {
     private final Queue<UpdateEvent> eventQueue;
     private final Path dir;
     private final boolean processOnce;
+    private final boolean deleteFiles;
 
     private List<Path> paths = null;
     private Path path; // Current path being processed
     private Map<Path, BufferedReader> readerMap = new HashMap<>();
 
-    public NextFileNextLine(Queue<UpdateEvent> eventQueue, Path dir, boolean processOnce) {
+    public NextFileNextLine(Queue<UpdateEvent> eventQueue, Path dir, boolean processOnce, boolean deleteFiles) {
         this.eventQueue = eventQueue;
         this.dir = dir;
         this.processOnce = processOnce;
+        this.deleteFiles = deleteFiles;
     }
 
     private BufferedReader getReader(Path path) {
@@ -88,6 +90,9 @@ public class NextFileNextLine implements Provider {
                  if(line == null) {
                      paths.remove(path);
                      reader.close();
+                     if(deleteFiles) {
+                         Files.delete(path);
+                     }
                      if(paths.isEmpty() && processOnce) {
                          return ProviderResult.PROCESS_FINISHED;
                      }

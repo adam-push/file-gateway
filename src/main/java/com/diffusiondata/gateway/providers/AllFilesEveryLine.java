@@ -15,11 +15,13 @@ public class AllFilesEveryLine implements Provider {
     private final Queue<UpdateEvent> eventQueue;
     private final Path dir;
     private final boolean processOnce;
+    private final boolean deleteFiles;
 
-    public AllFilesEveryLine(Queue<UpdateEvent> eventQueue, Path dir, boolean processOnce) {
+    public AllFilesEveryLine(Queue<UpdateEvent> eventQueue, Path dir, boolean processOnce, boolean deleteFiles) {
         this.eventQueue = eventQueue;
         this.dir = dir;
         this.processOnce = processOnce;
+        this.deleteFiles = deleteFiles;
     }
 
     public ProviderResult run() {
@@ -31,6 +33,9 @@ public class AllFilesEveryLine implements Provider {
                     Files.readAllLines(path).forEach(line -> {
                         eventQueue.add(new UpdateEvent(topicName, line));
                     });
+                    if(deleteFiles) {
+                        Files.delete(path);
+                    }
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     return ProviderResult.PROCESS_ERROR;
