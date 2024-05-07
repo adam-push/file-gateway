@@ -70,7 +70,7 @@ public class FileGateway implements GatewayApplication {
     @Override
     public PollingSourceHandler addPollingSource(ServiceDefinition serviceDefinition, Publisher publisher, StateHandler stateHandler) {
         final Map<String, Object> parameters = serviceDefinition.getParameters();
-        return new FilePollingSourceHandler(publisher, parameters);
+        return new FilePollingSourceHandler(publisher, parameters, stateHandler);
     }
 
     @Override

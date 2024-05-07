@@ -30,8 +30,8 @@
                 "application" : {
                     "directory" : "data",
                     "topicRoot" : "incoming",
-                    "stopAfterInitialLoad" : false,
-                    "recordPerLine" : true,
+                    "provider" : "NextFileNextLine",
+                    "stopAfterInitialLoad" : true,
                     "processor" : {
                         "script" : "script.clj",
                         "entry"  : "processor/transform"

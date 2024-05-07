@@ -7,5 +7,7 @@
 
 (defn transform
   [ctx value]
-  (println "++AST: from file:" ctx "with value" value)
-  {(str "processed/" ctx) value})
+  (println "Processor: Data from file:" ctx "with value" value)
+  (if-let [idx (re-find #"\d+" value)]
+    {(str "processed/" ctx "/" idx) value}
+    {(str "processed/" ctx) value}))

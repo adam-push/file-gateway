@@ -1,36 +1,66 @@
 package com.diffusiondata.gateway;
 
 import clojure.lang.APersistentMap;
-import com.diffusiondata.gateway.files.DirectoryLoader;
 import com.diffusiondata.gateway.files.UpdateEvent;
-import com.diffusiondata.gateway.framework.DiffusionGatewayFramework;
-import com.diffusiondata.gateway.framework.PollingSourceHandler;
-import com.diffusiondata.gateway.framework.Publisher;
+import com.diffusiondata.gateway.framework.*;
 import com.diffusiondata.gateway.framework.exceptions.PayloadConversionException;
+import com.diffusiondata.gateway.providers.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
+import java.util.concurrent.*;
 
 public class FilePollingSourceHandler implements PollingSourceHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(FilePollingSourceHandler.class);
 
     private final Publisher publisher;
+    private final StateHandler stateHandler;
+
     private final Path dir;
     private final boolean stopAfterInitialLoad;
     private final Path topicRoot;
     private final boolean recordPerLine;
     private final Processor processor;
 
-    public FilePollingSourceHandler(Publisher publisher, Map<String, Object> parameters) {
+    private final BlockingQueue<UpdateEvent> eventQueue;
+    private final Provider provider;
+
+    public FilePollingSourceHandler(Publisher publisher, Map<String, Object> parameters, StateHandler stateHandler) {
         this.publisher = publisher;
+        this.stateHandler = stateHandler;
 
         this.dir = Path.of((String) parameters.getOrDefault("directory", "data"));
         LOG.info("Polling files in directory: {}", dir);
+
+        this.stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
+
+        this.eventQueue = new LinkedBlockingQueue<>();
+        switch((String) parameters.getOrDefault("provider", "AllFilesAllData")) {
+            case "AllFilesAllData" :
+                this.provider = new AllFilesAllData(eventQueue, dir, stopAfterInitialLoad);
+                break;
+            case "AllFilesEveryLine" :
+                this.provider = new AllFilesEveryLine(eventQueue, dir, stopAfterInitialLoad);
+                break;
+            case "AllFilesNextLine":
+                this.provider = new AllFilesNextLine(eventQueue, dir, stopAfterInitialLoad);
+                break;
+            case "NextFileAllData":
+                this.provider = new NextFileAllData(eventQueue, dir, stopAfterInitialLoad);
+                break;
+            case "NextFileEveryLine":
+                this.provider = new NextFileEveryLine(eventQueue, dir, stopAfterInitialLoad);
+                break;
+            case "NextFileNextLine":
+                this.provider = new NextFileNextLine(eventQueue, dir, stopAfterInitialLoad);
+                break;
+            default:
+                this.provider = new AllFilesAllData(eventQueue, dir, stopAfterInitialLoad);
+                break;
+        }
 
         String root = (String)parameters.get("topicRoot");
         if(root != null) {
@@ -39,8 +69,6 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         else {
             topicRoot = Path.of("/");
         }
-
-        this.stopAfterInitialLoad = (boolean) parameters.getOrDefault("stopAfterInitialLoad", false);
 
         this.recordPerLine = (boolean) parameters.getOrDefault("recordPerLine", false);
 
@@ -84,72 +112,98 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
         return CompletableFuture.completedFuture(null);
     }
 
-    @Override
-    public CompletableFuture<?> poll() {
-        CompletableFuture<?> future = new CompletableFuture<>();
+    private Future<?> processTask = null;
+    private EventQueueProcessor eventQueueProcessor = null;
 
-        final DirectoryLoader loader = new DirectoryLoader(dir);
-        final Stream<UpdateEvent> updateEventStream = loader.eventStream();
+    private class EventQueueProcessor implements Runnable {
+        private volatile boolean canExit = false;
 
-        LOG.debug("poll...");
-        ArrayList<CompletableFuture<?>> publishFutures = new ArrayList<>();
-                updateEventStream.forEach(evt -> {
-
-            // Use Path to convert to a topic path, they are similar enough
-            String topicPath = Path.of(topicRoot.toString(), evt.getName()).toString();
-
-            if(recordPerLine) {
-                evt.getPayload().lines().forEach(line -> {
-                    Object value;
-                    if(processor != null) {
-                        value = processor.invoke(evt.getName(), line);
-                    }
-                    else {
-                        value = line;
-                    }
-                    publishFutures.add(proxyPublish(topicPath, value));
-                });
-            }
-            else {
-                Object value;
-                if(processor != null) {
-                    value = processor.invoke(evt.getName(), evt.getPayload());
-                }
-                else {
-                    value = evt.getPayload();
-                }
-                publishFutures.add(proxyPublish(topicPath, value));
-            }
-
-        });
-
-        publishFutures.forEach(CompletableFuture::join);
-        future.complete(null);
-
-        if(stopAfterInitialLoad) {
-            DiffusionGatewayFramework.shutdown();
-            try {
-                Thread.sleep(2000);
-            }
-            catch(InterruptedException ignore) {
-            }
-            finally {
-                Runtime.getRuntime().exit(0);
-            }
+        public void canExit() {
+            canExit = true;
         }
 
-        return future;
+        @Override
+        public void run() {
+            List<CompletableFuture<?>> futures = new ArrayList<>();
+
+            UpdateEvent updateEvent;
+            while (true) {
+                try {
+                    updateEvent = eventQueue.poll(100, TimeUnit.MILLISECONDS);
+                    if (updateEvent == null) {
+                        if (canExit) {
+                            break;
+                        } else {
+                            continue;
+                        }
+                    }
+                    futures.add(proxyPublish(updateEvent.getName(), updateEvent.getPayload()));
+                } catch (InterruptedException intEx) {
+                    continue;
+                }
+            }
+
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        }
+    }
+
+    public void startProcessing() {
+        if(processTask == null || processTask.isDone() || processTask.isCancelled()) {
+            eventQueueProcessor = new EventQueueProcessor();
+            processTask = Executors.newSingleThreadExecutor().submit(eventQueueProcessor);
+        }
+    }
+
+    public void stopProcessing() {
+        if(processTask != null) {
+            processTask.cancel(false);
+            processTask = null;
+        }
+    }
+
+    public CompletableFuture<?> poll() {
+
+        if(processTask == null || processTask.isDone()) {
+            startProcessing();
+        }
+
+        ProviderResult result = provider.run();
+
+        // Signal to processor that it should exit if the queue is empty
+        eventQueueProcessor.canExit();
+
+        // TODO: Wait for all events to be done
+        while(! processTask.isDone()) {
+            try {
+                Thread.sleep(10);
+            }
+            catch(InterruptedException ignore) {}
+        }
+
+        switch(result) {
+            case PROCESS_OK:
+                return CompletableFuture.completedFuture(null);
+            case PROCESS_FINISHED:
+                stateHandler.reportStatus(StateHandler.Status.RED, "Finished processing", "All files are processed and service is configured to stop");
+                return CompletableFuture.completedFuture(null);
+            case PROCESS_ERROR:
+                return CompletableFuture.failedFuture(new RuntimeException("Provider failed"));
+            default:
+                return CompletableFuture.failedFuture(new RuntimeException("Inknown ProviderResult: " + result));
+        }
     }
 
     @Override
     public CompletableFuture<?> pause(PauseReason reason) {
         LOG.info("Pausing: " + reason);
+        stopProcessing();
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<?> resume(ResumeReason reason) {
         LOG.info("Resuming: " + reason);
+        startProcessing();
         return CompletableFuture.completedFuture(null);
     }
 }
