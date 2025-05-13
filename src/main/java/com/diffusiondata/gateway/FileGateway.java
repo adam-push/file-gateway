@@ -3,9 +3,10 @@ package com.diffusiondata.gateway;
 import com.diffusiondata.gateway.framework.*;
 import com.diffusiondata.gateway.framework.exceptions.ApplicationConfigurationException;
 import com.diffusiondata.gateway.framework.exceptions.InvalidConfigurationException;
+import com.diffusiondata.gateway.metrics.MetricsHandler;
+
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,10 +19,13 @@ import static com.diffusiondata.gateway.framework.DiffusionGatewayFramework.newA
 public class FileGateway implements GatewayApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileGateway.class);
-    private static final PrometheusMeterRegistry meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    // private static final PrometheusMeterRegistry meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
-    private PrometheusServer prometheusServer;
     private ApplicationContext applicationContext;
+
+    private final MetricsHandler metricsHandler = MetricsHandler.INSTANCE;
+
+    private MeterRegistry meterRegistry;
 
     private String prometheusPath = "/metrics";
     private int prometheusPort = 8005;
@@ -36,11 +40,13 @@ public class FileGateway implements GatewayApplication {
     @Override
     public void initialize(ApplicationContext applicationContext) throws ApplicationConfigurationException {
         this.applicationContext = applicationContext;
-        if(applicationContext.getGlobalConfiguration().containsKey("prometheus")) {
-            Map<String, Object> prometheusConfig = (Map<String, Object>)applicationContext.getGlobalConfiguration().get("prometheus");
-            this.prometheusPath = (String)prometheusConfig.getOrDefault("path", this.prometheusPath);
-            this.prometheusPort = (int)prometheusConfig.getOrDefault("port", this.prometheusPort);
-        }
+        // if(applicationContext.getGlobalConfiguration().containsKey("prometheus")) {
+        //     Map<String, Object> prometheusConfig = (Map<String, Object>)applicationContext.getGlobalConfiguration().get("prometheus");
+        //     this.prometheusPath = (String)prometheusConfig.getOrDefault("path", this.prometheusPath);
+        //     this.prometheusPort = (int)prometheusConfig.getOrDefault("port", this.prometheusPort);
+        // }
+
+
     }
 
     @Override
@@ -57,14 +63,12 @@ public class FileGateway implements GatewayApplication {
                 .build("FILE_SOURCE", 1);
     }
 
+    
     @Override
-    public GatewayMeterRegistry getGatewayMeterRegistry() {
-        return new GatewayMeterRegistry() {
-            @Override
-            public MeterRegistry getMeterRegistry() {
-                return meterRegistry;
-            }
-        };
+    public GatewayMeterRegistry initializeGatewayMeterRegistry(Map<String, Object> globalApplicationConfiguration) {
+        this.meterRegistry = metricsHandler.initializeMeterRegistry(globalApplicationConfiguration);
+        return () -> meterRegistry;
+            
     }
 
     @Override
@@ -83,7 +87,7 @@ public class FileGateway implements GatewayApplication {
 
     @Override
     public CompletableFuture<?> start() {
-        if(applicationContext.isMetricsEnabled()) {
+/*         if(applicationContext.isMetricsEnabled()) {
             try {
                 prometheusServer = new PrometheusServer(prometheusPath, prometheusPort, meterRegistry);
                 applicationContext.getExecutorService().submit(prometheusServer);
@@ -93,17 +97,17 @@ public class FileGateway implements GatewayApplication {
                 return CompletableFuture.completedFuture(ex);
             }
         }
-
+ */
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<?> stop() {
         LOG.info("stop");
-        if(prometheusServer != null) {
+/*         if(prometheusServer != null) {
             prometheusServer.close();
         }
-
+ */
         return CompletableFuture.completedFuture(null);
     }
 }
