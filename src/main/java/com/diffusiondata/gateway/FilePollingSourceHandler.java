@@ -86,7 +86,12 @@ public class FilePollingSourceHandler implements PollingSourceHandler {
     private CompletableFuture<? extends Object> proxyPublish(String defaultTopic, Object value) {
         if(value instanceof String) {
             try {
-                return publisher.publish(defaultTopic, (String) value);
+                if(publisher instanceof CustomPublisher) {
+                    return ((CustomPublisher)publisher).process(value, null);
+                }
+                else {
+                    return publisher.publish(defaultTopic, (String) value);
+                }
             }
             catch(PayloadConversionException ex) {
                 ex.printStackTrace();
