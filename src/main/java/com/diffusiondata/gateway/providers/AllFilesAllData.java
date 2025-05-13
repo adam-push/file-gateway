@@ -32,7 +32,9 @@ public class AllFilesAllData implements Provider {
                 try {
                     data = new String(Files.readAllBytes(path));
                     eventQueue.add(new UpdateEvent(topicName, data));
-                    Files.delete(path);
+                    if(deleteFiles) {
+                        Files.delete(path);
+                    }
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     return ProviderResult.PROCESS_ERROR;
